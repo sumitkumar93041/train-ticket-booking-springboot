@@ -157,4 +157,34 @@ The wrong id and the wrong phone give the **same** message on purpose, so nobody
 ## 🧪 How I tested it
 
 I tested every endpoint in Postman and checked the data in MySQL Workbench:
-- Booked a seat, then
+- Booked a seat, then booked the same seat again → `409`
+- Booked the same seat on a different date → allowed
+- Cancelled with more than 2 days left → refund **487** (75%)
+- Cancelled with less than 2 days left → refund **325** (50%)
+- Cancelled twice → `409`; wrong phone or fake id → `404`
+- After a cancellation, the seat can be booked again
+
+---
+
+## 🧠 Design decisions
+
+- **Cancelled bookings are kept, not deleted.** They stay as history, and the seat check only looks at `BOOKED` rows, so a cancelled seat becomes free again.
+- **The server decides the fare**, not the client.
+- **`ResponseStatusException`** carries both the status code and the message from the Service up to the Controller.
+
+---
+
+## 🚧 Known limitations and future work
+
+- **Hold → Pay → Confirm flow** is not built yet (my core Java version already has it).
+- The seat check happens before saving and is not atomic, so two requests at the exact same moment could both pass. A database-level constraint or a transaction is the proper fix.
+- No login or Spring Security. The phone number is checked manually.
+- `GET /gettrains/{id}` and `GET /getbookings/{id}` return an empty `200` for an unknown id instead of `404`.
+- Booking status is a plain String; an enum would be safer.
+
+---
+
+## 👤 Author
+
+**Sumit Kumar**, B.E. Computer Science & Engineering student, SJB Institute of Technology
+GitHub: [sumitkumar93041](https://github.com/sumitkumar93041)
